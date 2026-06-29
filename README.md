@@ -31,6 +31,83 @@
 └── README.md
 ```
 
+## 0、环境配置总览（必看）
+
+本项目运行依赖由 **Python + Node + MySQL + 环境变量** 组成，建议先按本节核对，再执行安装步骤。
+
+### 0.1 软件版本建议
+
+| 组件 | 建议版本 | 用途 | 验证命令 |
+|------|----------|------|----------|
+| Python | 3.9+ | 后端 Django/DRF | `python --version` |
+| pip | 21+ | 安装后端依赖 | `pip --version` |
+| Node.js | 18+（推荐 20 LTS） | 前端构建/运行 | `node --version` |
+| npm | 8+ | 安装前端依赖 | `npm --version` |
+| MySQL | 8.x | 业务数据库 | `SELECT VERSION();` |
+| Navicat | 任意可用版本 | 可视化管理数据库 | - |
+
+### 0.2 端口与地址约定
+
+| 服务 | 地址 | 说明 |
+|------|------|------|
+| 后端 Django | `http://127.0.0.1:8000` | API 服务 |
+| 前端 Vite | `http://localhost:5173` | 页面访问入口 |
+| MySQL | `127.0.0.1:3306` | 数据库连接 |
+
+### 0.3 后端环境变量（`backend/.env`）
+
+请以 `backend/.env.example` 为模板创建，完整含义如下：
+
+```env
+# Django
+SECRET_KEY=change-me-to-a-random-secret-key   # Django 密钥，生产环境必须更换
+DEBUG=True                                    # 开发环境 True，生产环境 False
+ALLOWED_HOSTS=127.0.0.1,localhost             # 允许访问主机
+
+# MySQL
+DB_NAME=zyxt                                  # 数据库名（与 init_mysql.sql 保持一致）
+DB_USER=root                                  # 数据库用户名（可改 CYGLXT）
+DB_PASSWORD=your_mysql_password               # 数据库密码
+DB_HOST=127.0.0.1                             # 数据库主机
+DB_PORT=3306                                  # 数据库端口
+
+# CORS
+CORS_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+```
+
+> 若老师要求验收账号：可将 `DB_USER/DB_PASSWORD` 改为 `CYGLXT/学号`。
+
+### 0.4 前端环境变量（`frontend/.env`）
+
+```env
+VITE_API_BASE_URL=/api
+```
+
+说明：前端默认通过 Vite 代理把 `/api` 请求转发到 `http://127.0.0.1:8000`。
+
+### 0.5 关键配置文件说明
+
+| 文件 | 作用 |
+|------|------|
+| `backend/config/settings.py` | Django 全局配置（数据库、CORS、APP） |
+| `backend/.env` | 本地后端环境变量（不提交） |
+| `backend/.env.example` | 后端环境变量模板 |
+| `frontend/.env` | 前端运行环境变量 |
+| `frontend/vite.config.js` | 前端开发代理配置 |
+| `scripts/init_mysql.sql` | 初始化创建 `zyxt` 数据库 |
+| `scripts/sql/04_advanced_objects.sql` | 索引/存储过程/触发器/权限 |
+
+### 0.6 启动前 1 分钟自检清单
+
+- [ ] `backend/.env` 已填写正确数据库账号密码
+- [ ] MySQL 服务已启动且可连接
+- [ ] `zyxt` 库已创建，实验数据已导入
+- [ ] 已执行 `scripts/sql/04_advanced_objects.sql`
+- [ ] `python manage.py check` 无错误
+- [ ] `npm run build` 可成功
+
+---
+
 ## 一、环境准备（Mac）
 
 ### Python
@@ -53,6 +130,103 @@ npm --version
 ### MySQL 8
 
 确保 MySQL 服务已启动，默认端口 `3306`。
+
+---
+
+## 一-B、Windows 安装与运行说明（PowerShell）
+
+以下步骤适用于 Windows 10/11，建议使用 **PowerShell**。
+
+### 1) 安装基础软件
+
+请先安装并确认以下软件可用：
+
+- Python 3.9+（勾选 *Add Python to PATH*）
+- Node.js LTS（包含 npm）
+- MySQL 8（或已可用的 MySQL 服务）
+- Navicat（用于图形化管理数据库）
+
+验证命令：
+
+```powershell
+python --version
+pip --version
+node --version
+npm --version
+```
+
+### 2) 进入项目目录并准备虚拟环境
+
+```powershell
+cd "C:\你的路径\数据库实践"
+python -m venv .venv
+.\.venv\Scripts\activate
+pip install -r .\backend\requirements.txt
+```
+
+> 如果你项目里已经有 `.venv`，可直接执行 `.\.venv\Scripts\activate`。
+
+### 3) 安装前端依赖
+
+```powershell
+cd .\frontend
+npm install
+cd ..
+```
+
+### 4) 初始化数据库
+
+推荐在 Navicat 执行：
+
+- `scripts/init_mysql.sql`
+- 实验 1-6 的建表和数据 SQL
+- `scripts/sql/04_advanced_objects.sql`
+
+如使用命令行（已安装 mysql 客户端）：
+
+```powershell
+mysql -u root -p < .\scripts\init_mysql.sql
+```
+
+### 5) 配置后端数据库连接
+
+编辑 `backend/.env`：
+
+```env
+DB_NAME=zyxt
+DB_USER=你的数据库用户名
+DB_PASSWORD=你的数据库密码
+DB_HOST=127.0.0.1
+DB_PORT=3306
+```
+
+### 6) 启动项目（两个终端）
+
+**终端 A（后端）：**
+
+```powershell
+cd "C:\你的路径\数据库实践\backend"
+..\.venv\Scripts\activate
+python manage.py runserver
+```
+
+> 如果 `..\.venv\Scripts\activate` 无法执行，请改用：
+>
+> ```powershell
+> cd "C:\你的路径\数据库实践"
+> .\.venv\Scripts\activate
+> cd .\backend
+> python manage.py runserver
+> ```
+
+**终端 B（前端）：**
+
+```powershell
+cd "C:\你的路径\数据库实践\frontend"
+npm run dev
+```
+
+浏览器访问：`http://localhost:5173`
 
 ---
 
@@ -212,4 +386,3 @@ npm run dev
 **Q: 前端无法连接后端**
 
 确认 Django 在 8000 端口运行，Vite 在 5173 端口运行；前端通过代理将 `/api` 转发到后端。
-# Petroleum-Plant-Data-Management-System
